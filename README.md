@@ -18,6 +18,8 @@ gbspack -b 6 scene5_init.o scene6_init.o etc...
 
 - `--output` Set the output path to write modified object files (defaults to updating in place)
 
+- `--ext` Set the output file extension (default "o")
+
 ## Input files
 
 Input object files must be in the following format

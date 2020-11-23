@@ -40,6 +40,13 @@ fn main() -> std::io::Result<()> {
         .takes_value(true),
     )
     .arg(
+      Arg::with_name("ext")
+        .short("e")
+        .long("ext")
+        .help("Replace the file extension for output files")
+        .takes_value(true),
+    )    
+    .arg(
       Arg::with_name("INPUT")
         .help("Sets the input .o files to use")
         .required(true)
@@ -57,10 +64,12 @@ fn main() -> std::io::Result<()> {
   let bank_offset = value_t!(matches.value_of("offset"), u32).unwrap_or(6);
   let input_files = values_t!(matches.values_of("INPUT"), String).unwrap();
   let output_path = value_t!(matches.value_of("output_path"), String).unwrap_or(("").to_string());
+  let ext = value_t!(matches.value_of("ext"), String).unwrap_or(("o").to_string());
 
   if verbose {
     println!("Starting at bank={}", bank_offset);
     println!("Processing {} files", input_files.len());
+    println!("Using extension .{}", ext);
     if output_path.len() > 0 {
       println!("Output path={}", output_path);
     }
@@ -92,11 +101,13 @@ fn main() -> std::io::Result<()> {
       let output_filename = if output_path.len() > 0 {
         // Store output in dir specified by output_path
         let path = Path::new(&output_path);
-        let new_path = path.join(format!("{}.o", object.stem));
+        let new_path = path.join(format!("{}.{}", object.stem, ext));
         new_path.to_str().unwrap().to_owned()
       } else {
         // Replace object file in-place
-        object.filename.clone()
+        let original_path = Path::new(&object.filename);
+        let new_path = original_path.parent().unwrap().join(format!("{}.{}", object.stem, ext));
+        new_path.to_str().unwrap().to_owned()
       };
 
       if verbose {
