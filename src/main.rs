@@ -167,11 +167,28 @@ fn parse_size(line: String) -> (u32, u32) {
 /// Update an object file's contents replacing the bank references with
 /// the specified bank number
 fn set_bank(object_string: &String, stem: &String, original_bank: u32, bank_no: u32) -> String {
+  let mut new_string = object_string.clone();
+
+  // Find banked functions
+  for line in object_string.lines() {
+    if line.starts_with("S b_") {
+      let split = line[4..].split(" ").collect::<Vec<&str>>();
+      let fn_name = split[0];
+      let fn_def = format!("S _{}", fn_name);
+      // If symbol has pair
+      if new_string.contains(&fn_def) {        
+        let find_banked_fn_def = format!("b_{} Def{:06X}", fn_name, original_bank);
+        let replace_banked_fn_def = format!("b_{} Def{:06X}", fn_name, bank_no);
+        new_string = new_string.replace(&find_banked_fn_def, &replace_banked_fn_def);
+      }
+    }
+  }
+
   let find_code = format!("CODE_{}", original_bank);
   let replace_code = format!("CODE_{}", bank_no);
   let find_def = format!("__bank_{} Def{:06X}", stem, original_bank);
   let replace_def = format!("__bank_{} Def{:06X}", stem, bank_no);
-  object_string
+  new_string
     .replace(&find_code, &replace_code)
     .replace(&find_def, &replace_def)
 }
