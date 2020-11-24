@@ -35,7 +35,7 @@ fn main() -> std::io::Result<()> {
     .arg(
       Arg::with_name("mbc1")
         .long("mbc1")
-        .help("Use MBC1 hardware (skip banks 0x20, 0x40 and 0x60"),
+        .help("Use MBC1 hardware (skip banks 0x20, 0x40 and 0x60)"),
     )    
     .arg(
       Arg::with_name("output_path")
