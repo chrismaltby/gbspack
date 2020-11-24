@@ -24,6 +24,8 @@ gbspack -b 6 scene5_init.o scene6_init.o etc...
 
 - `--print-cart` Print minimum cartridge size for allocated data
 
+- `--mbc1` Use MBC1 hardware (skip banks 0x20, 0x40 and 0x60)
+
 ## Input files
 
 Input object files must be in the following format
