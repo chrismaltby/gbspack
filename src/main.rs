@@ -29,7 +29,7 @@ fn main() -> std::io::Result<()> {
         .short("b")
         .long("bank")
         .value_name("NN")
-        .help("Sets the first bank to use (default 6)")
+        .help("Sets the first bank to use (default 1)")
         .takes_value(true),
     )
     .arg(
@@ -81,7 +81,7 @@ fn main() -> std::io::Result<()> {
   let print_max = matches.is_present("print_max");
   let print_cart = matches.is_present("print_cart");
   let mbc1 = matches.is_present("mbc1");
-  let bank_offset = value_t!(matches.value_of("offset"), u32).unwrap_or(6);
+  let bank_offset = value_t!(matches.value_of("offset"), u32).unwrap_or(1);
   let input_files = values_t!(matches.values_of("INPUT"), String).unwrap();
   let output_path = value_t!(matches.value_of("output_path"), String).unwrap_or(("").to_string());
   let ext = value_t!(matches.value_of("ext"), String).unwrap_or(("o").to_string());

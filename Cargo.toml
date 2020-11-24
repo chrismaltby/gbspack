@@ -1,6 +1,6 @@
 [package]
 name = "gbspack"
-version = "1.2.0"
+version = "1.2.1"
 authors = ["Chris Maltby <chris.maltby@gmail.com>"]
 edition = "2018"
 

@@ -14,7 +14,7 @@ gbspack -b 6 scene5_init.o scene6_init.o etc...
 
 ## Options
 
-- `--bank` Set the initial bank to pack code into (default 6)
+- `--bank` Set the initial bank to pack code into (default 1)
 
 - `--output` Set the output path to write modified object files (defaults to updating in place)
 
