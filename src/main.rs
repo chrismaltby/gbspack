@@ -21,7 +21,7 @@ const BANK_SIZE: u32 = 16384;
 
 fn main() -> std::io::Result<()> {
   let matches = App::new("GBStudio Pack")
-    .version("1.2.0")
+    .version("1.2.1")
     .author("Chris Maltby. <chris.maltby@gmail.com>")
     .about("Packs object files created by GB Studio data into banks")
     .arg(
