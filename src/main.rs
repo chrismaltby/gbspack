@@ -54,6 +54,18 @@ fn main() -> std::io::Result<()> {
         .index(1),
     )
     .arg(
+      Arg::with_name("print_max")
+        .short("p")
+        .long("print-max")
+        .help("Output the max bank number used"),
+    )
+    .arg(
+      Arg::with_name("print_cart")
+        .short("c")
+        .long("print-cart")
+        .help("Output the minimum cartridge size required"),
+    )
+    .arg(
       Arg::with_name("verbose")
         .short("v")
         .help("Sets the level of verbosity"),
@@ -61,6 +73,8 @@ fn main() -> std::io::Result<()> {
     .get_matches();
 
   let verbose = matches.is_present("verbose");
+  let print_max = matches.is_present("print_max");
+  let print_cart = matches.is_present("print_cart");
   let bank_offset = value_t!(matches.value_of("offset"), u32).unwrap_or(6);
   let input_files = values_t!(matches.values_of("INPUT"), String).unwrap();
   let output_path = value_t!(matches.value_of("output_path"), String).unwrap_or(("").to_string());
@@ -123,12 +137,26 @@ fn main() -> std::io::Result<()> {
     }
     bank_no += 1;
   }
+  bank_no -= 1;
 
   if verbose {
     println!("Done");
   }
 
+  if print_cart {
+    println!("{}", to_cart_size(bank_no));
+  } else if print_max {
+    println!("{}", bank_no);
+  }
+
   Ok(())
+}
+
+/// Calculate minimum cart size needed by rounding max bank number
+/// to nearest power of 2
+fn to_cart_size(max_bank: u32) -> u32 {
+  let power = (((max_bank + 1) as f32).ln() / (2_f32).ln()).ceil() as u32;
+  (2_u32).pow(power)
 }
 
 /// Read an object file into a struct containing the information required

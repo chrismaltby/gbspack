@@ -20,6 +20,10 @@ gbspack -b 6 scene5_init.o scene6_init.o etc...
 
 - `--ext` Set the output file extension (default "o")
 
+- `--print-max` Print maximum bank number with allocated data
+
+- `--print-cart` Print minimum cartridge size for allocated data
+
 ## Input files
 
 Input object files must be in the following format
