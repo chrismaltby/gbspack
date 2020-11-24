@@ -33,6 +33,11 @@ fn main() -> std::io::Result<()> {
         .takes_value(true),
     )
     .arg(
+      Arg::with_name("mbc1")
+        .long("mbc1")
+        .help("Use MBC1 hardware (skip banks 0x20, 0x40 and 0x60"),
+    )    
+    .arg(
       Arg::with_name("output_path")
         .short("o")
         .long("output")
@@ -75,6 +80,7 @@ fn main() -> std::io::Result<()> {
   let verbose = matches.is_present("verbose");
   let print_max = matches.is_present("print_max");
   let print_cart = matches.is_present("print_cart");
+  let mbc1 = matches.is_present("mbc1");
   let bank_offset = value_t!(matches.value_of("offset"), u32).unwrap_or(6);
   let input_files = values_t!(matches.values_of("INPUT"), String).unwrap();
   let output_path = value_t!(matches.value_of("output_path"), String).unwrap_or(("").to_string());
@@ -86,6 +92,9 @@ fn main() -> std::io::Result<()> {
     println!("Using extension .{}", ext);
     if output_path.len() > 0 {
       println!("Output path={}", output_path);
+    }
+    if mbc1 {
+      println!("Using MBC1 hardware");
     }
   }
 
@@ -108,6 +117,15 @@ fn main() -> std::io::Result<()> {
   // Write packed files back to disk
   let mut bank_no = bank_offset;
   for bin in packed {
+    // Skip invalid banks when using MBC1
+    if mbc1 {
+      if bank_no == 0x20 || bank_no == 0x40 || bank_no == 0x60 {
+        if verbose {
+          println!("MBC1 skipping bank {}", bank_no);
+        }
+        bank_no += 1;
+      }
+    }
     if verbose {
       println!("Bank={}", bank_no);
     }
