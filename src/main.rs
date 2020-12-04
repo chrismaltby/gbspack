@@ -107,8 +107,10 @@ fn main() -> std::io::Result<()> {
     let object = to_object_data(&filename)?;
     if verbose {
       println!("Size was: {}", object.size);
-    }    
-    objects.push(object);
+    }
+    if object.size > 0 {
+      objects.push(object);
+    }
   }
 
   // Pack object data into banks
@@ -129,7 +131,9 @@ fn main() -> std::io::Result<()> {
     if verbose {
       println!("Bank={}", bank_no);
     }
+    let mut bank_size = 0;
     for object in bin.objects.iter() {
+      bank_size += object.size;
       let output_filename = if output_path.len() > 0 {
         // Store output in dir specified by output_path
         let path = Path::new(&output_path);
@@ -153,6 +157,9 @@ fn main() -> std::io::Result<()> {
         Ok(_) => {}
       }
     }
+    if verbose {
+      println!("Size was {}", bank_size);
+    }    
     bank_no += 1;
   }
   bank_no -= 1;
@@ -196,10 +203,6 @@ fn to_object_data(filename: &String) -> std::io::Result<ObjectData> {
       original_bank = parsed_bank;
       break;
     }
-  }
-
-  if size == 0 {
-    panic!("Data size couldn't be calculated. Is initial bank set to CODE_255?")
   }
 
   Ok(ObjectData {
