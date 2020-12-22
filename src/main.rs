@@ -21,7 +21,7 @@ const BANK_SIZE: u32 = 16384;
 
 fn main() -> std::io::Result<()> {
   let matches = App::new("GBStudio Pack")
-    .version("1.2.2")
+    .version("1.2.3")
     .author("Chris Maltby. <chris.maltby@gmail.com>")
     .about("Packs object files created by GB Studio data into banks")
     .arg(
@@ -108,9 +108,7 @@ fn main() -> std::io::Result<()> {
     if verbose {
       println!("Size was: {}", object.size);
     }
-    if object.size > 0 {
       objects.push(object);
-    }
   }
 
   // Pack object data into banks
