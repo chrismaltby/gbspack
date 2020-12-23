@@ -21,7 +21,7 @@ const BANK_SIZE: u32 = 16384;
 
 fn main() -> std::io::Result<()> {
   let matches = App::new("GBStudio Pack")
-    .version("1.2.3")
+    .version("1.2.4")
     .author("Chris Maltby. <chris.maltby@gmail.com>")
     .about("Packs object files created by GB Studio data into banks")
     .arg(
@@ -31,6 +31,14 @@ fn main() -> std::io::Result<()> {
         .value_name("NN")
         .help("Sets the first bank to use (default 1)")
         .takes_value(true),
+    )
+    .arg(
+      Arg::with_name("filter")
+      .short("f")
+      .long("filter")
+      .value_name("NN")
+      .help("Only repack files from specified bank (default repack all banks)")
+      .takes_value(true),
     )
     .arg(
       Arg::with_name("mbc1")
@@ -85,6 +93,7 @@ fn main() -> std::io::Result<()> {
   let input_files = values_t!(matches.values_of("INPUT"), String).unwrap();
   let output_path = value_t!(matches.value_of("output_path"), String).unwrap_or(("").to_string());
   let ext = value_t!(matches.value_of("ext"), String).unwrap_or(("o").to_string());
+  let filter = value_t!(matches.value_of("filter"), u32).unwrap_or(0);
 
   if verbose {
     println!("Starting at bank={}", bank_offset);
@@ -100,6 +109,7 @@ fn main() -> std::io::Result<()> {
 
   // Convert input files to Vec<ObjectData>
   let mut objects = Vec::new();
+  let mut skipped_objects = Vec::new();
   for filename in input_files {
     if verbose {
       println!("Processing file: {}", filename);
@@ -108,11 +118,31 @@ fn main() -> std::io::Result<()> {
     if verbose {
       println!("Size was: {}", object.size);
     }
+    if filter == 0 || (object.size > 0 && object.original_bank == filter) {
       objects.push(object);
+    } else {
+      if verbose {
+        println!("Filtered: {} {}", object.filename, object.original_bank);
+      }      
+      skipped_objects.push(object);
+    }
   }
 
   // Pack object data into banks
   let packed = pack_object_data(objects);
+
+  // Write skipped files back to disk (in new output path with new ext)
+  for object in skipped_objects.iter() {
+    let output_filename = to_output_filename(object, &output_path, &ext);
+    if verbose {
+      println!("Writing skipped file {}", output_filename);
+    }
+    let mut file = File::create(output_filename)?;
+    match file.write_all(object.contents.as_bytes()) {
+      Err(why) => panic!("couldn't write to {}: {}", object.filename, why),
+      Ok(_) => {}
+    }
+  }
 
   // Write packed files back to disk
   let mut bank_no = bank_offset;
@@ -132,18 +162,7 @@ fn main() -> std::io::Result<()> {
     let mut bank_size = 0;
     for object in bin.objects.iter() {
       bank_size += object.size;
-      let output_filename = if output_path.len() > 0 {
-        // Store output in dir specified by output_path
-        let path = Path::new(&output_path);
-        let new_path = path.join(format!("{}.{}", object.stem, ext));
-        new_path.to_str().unwrap().to_owned()
-      } else {
-        // Replace object file in-place
-        let original_path = Path::new(&object.filename);
-        let new_path = original_path.parent().unwrap().join(format!("{}.{}", object.stem, ext));
-        new_path.to_str().unwrap().to_owned()
-      };
-
+      let output_filename = to_output_filename(object, &output_path, &ext);
       if verbose {
         println!("Writing file {}", output_filename);
       }
@@ -173,6 +192,21 @@ fn main() -> std::io::Result<()> {
   }
 
   Ok(())
+}
+
+/// Get new filename for object data
+fn to_output_filename(object: &ObjectData, output_path: &String, ext: &String) -> String {
+  if output_path.len() > 0 {
+    // Store output in dir specified by output_path
+    let path = Path::new(&output_path);
+    let new_path = path.join(format!("{}.{}", object.stem, ext));
+    new_path.to_str().unwrap().to_owned()
+  } else {
+    // Replace object file in-place
+    let original_path = Path::new(&object.filename);
+    let new_path = original_path.parent().unwrap().join(format!("{}.{}", object.stem, ext));
+    new_path.to_str().unwrap().to_owned()
+  }
 }
 
 /// Calculate minimum cart size needed by rounding max bank number
@@ -273,7 +307,7 @@ fn pack_object_data(mut objects: Vec<ObjectData>) -> Vec<Bank> {
     for bank in &mut banks {
       // Calculate current size of bank
       let res: u32 = bank.objects.iter().fold(0, |a, b| a + b.size);
-
+      
       // If can fit store it here
       if (res + object.size) <= BANK_SIZE {
         bank.objects.push(object.clone());

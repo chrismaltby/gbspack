@@ -26,6 +26,8 @@ gbspack -b 6 scene5_init.o scene6_init.o etc...
 
 - `--mbc1` Use MBC1 hardware (skip banks 0x20, 0x40 and 0x60)
 
+- `--filter` Only repack files from specified bank (default repack all banks)
+
 ## Input files
 
 Input object files must be in the following format
