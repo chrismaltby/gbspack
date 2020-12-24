@@ -3,7 +3,7 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct Bank {
   objects: Vec<ObjectData>,
 }
@@ -15,6 +15,7 @@ struct ObjectData {
   filename: String,
   stem: String,
   contents: String,
+  fixed: bool
 }
 
 const BANK_SIZE: u32 = 16384;
@@ -114,22 +115,19 @@ fn main() -> std::io::Result<()> {
     if verbose {
       println!("Processing file: {}", filename);
     }
-    let object = to_object_data(&filename)?;
+    let object = to_object_data(&filename, filter)?;
     if verbose {
       println!("Size was: {}", object.size);
     }
-    if filter == 0 || (object.size > 0 && object.original_bank == filter) {
-      objects.push(object);
-    } else {
-      if verbose {
-        println!("Filtered: {} {}", object.filename, object.original_bank);
-      }      
+    if object.size == 0 {
       skipped_objects.push(object);
+    } else {
+      objects.push(object);
     }
   }
 
   // Pack object data into banks
-  let packed = pack_object_data(objects);
+  let packed = pack_object_data(objects, bank_offset);
 
   // Write skipped files back to disk (in new output path with new ext)
   for object in skipped_objects.iter() {
@@ -218,7 +216,7 @@ fn to_cart_size(max_bank: u32) -> u32 {
 
 /// Read an object file into a struct containing the information required
 /// to pack the data into banks
-fn to_object_data(filename: &String) -> std::io::Result<ObjectData> {
+fn to_object_data(filename: &String, filter: u32) -> std::io::Result<ObjectData> {
   let path = Path::new(filename);
   let stem = path.file_stem().unwrap().to_str().unwrap();
   let mut file = File::open(path)?;
@@ -243,6 +241,7 @@ fn to_object_data(filename: &String) -> std::io::Result<ObjectData> {
     contents: contents.to_string(),
     size,
     original_bank,
+    fixed: filter != 0 && filter != original_bank
   })
 }
 
@@ -288,7 +287,7 @@ fn set_bank(object_string: &String, stem: &String, original_bank: u32, bank_no: 
 /// Pack an vector of object data into a vector of banks
 /// using a first fit algorithm after sorting the input data
 /// by descending size
-fn pack_object_data(mut objects: Vec<ObjectData>) -> Vec<Bank> {
+fn pack_object_data(mut objects: Vec<ObjectData>, bank_offset: u32) -> Vec<Bank> {
   let mut banks = Vec::new();
   banks.push(Bank { objects: vec![] });
 
@@ -299,12 +298,44 @@ fn pack_object_data(mut objects: Vec<ObjectData>) -> Vec<Bank> {
     panic!("Object file too large to fit in bank.");
   }
 
+  // Loop through fixed objects
+  for object in objects.iter() {
+    if object.fixed {
+      let size_diff: i32 = (object.original_bank as i32) - (banks.len() as i32);
+      if size_diff <= 0 {
+        banks[(object.original_bank - 1) as usize].objects.push(object.clone());
+      } else {
+        println!("ADD {} NEW BANKS - orig={} len={}", size_diff, object.original_bank, banks.len());
+        // Add the extra banks first
+        let arr = vec![Bank { objects: vec![] }; size_diff as usize];
+        banks.extend_from_slice(&arr);
+        println!("AFTER len={}", banks.len());
+
+      }
+    }
+  }
+
+  println!("BANKS LEN = {}", banks.len());
+
   while !objects.is_empty() {
     let mut stored = false;
     let object = objects.pop().unwrap();
 
+    // Already packed fixed objects by this point
+    if object.fixed {
+      continue;
+    }
+
     // Find first fit in existing banks
+    let mut bank_no = 0;
     for bank in &mut banks {
+      bank_no += 1;
+
+      // Skip until at bank_offset
+      if bank_no < bank_offset {
+        continue;
+      }
+
       // Calculate current size of bank
       let res: u32 = bank.objects.iter().fold(0, |a, b| a + b.size);
       
@@ -323,6 +354,8 @@ fn pack_object_data(mut objects: Vec<ObjectData>) -> Vec<Bank> {
       banks.push(new_bank);
     }
   }
+
+  
 
   banks
 }
