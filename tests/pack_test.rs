@@ -1,4 +1,4 @@
-extern crate gbspack;
+extern crate gbspacklib;
 
 #[cfg(test)]
 mod tests {
@@ -8,18 +8,18 @@ mod tests {
   #[test]
   fn test_parse_area_size() {
     let input = "A _CODE_3 size 8 flags 0 addr 0".to_owned();
-    let expected_output = gbspack::ObjectBankData { size: 8, bank: 3 };
-    assert_eq!(gbspack::parse_size(&input), expected_output);
+    let expected_output = gbspacklib::ObjectBankData { size: 8, bank: 3 };
+    assert_eq!(gbspacklib::parse_size(&input), expected_output);
   }
 
   #[test]
   fn test_parse_area_size_hex() {
     let input = "A _CODE_15 size ff flags 0 addr 0".to_owned();
-    let expected_output = gbspack::ObjectBankData {
+    let expected_output = gbspacklib::ObjectBankData {
       size: 255,
       bank: 15,
     };
-    assert_eq!(gbspack::parse_size(&input), expected_output);
+    assert_eq!(gbspacklib::parse_size(&input), expected_output);
   }
 
   #[test]
@@ -36,13 +36,13 @@ A _CODE_255 size 55 flags 0 addr 0
 S _SCRIPT_3 Def000000"
       .to_owned();
     let expected_output = vec![
-      gbspack::ObjectBankData { size: 5, bank: 5 },
-      gbspack::ObjectBankData {
+      gbspacklib::ObjectBankData { size: 5, bank: 5 },
+      gbspacklib::ObjectBankData {
         size: 85,
         bank: 255,
       },
     ];
-    let output = gbspack::parse_sizes(&input);
+    let output = gbspacklib::parse_sizes(&input);
     assert_eq!(output.len(), 2);
     assert_eq!(output, expected_output);
   }
@@ -50,34 +50,34 @@ S _SCRIPT_3 Def000000"
   #[test]
   fn test_pack_areas() {
     let input = vec![
-      gbspack::ObjectData {
+      gbspacklib::ObjectData {
         filename: "a.o".to_string(),
         contents: "hello world".to_string(),
         banks: vec![
-          gbspack::ObjectBankData { size: 5, bank: 1 },
-          gbspack::ObjectBankData {
+          gbspacklib::ObjectBankData { size: 5, bank: 1 },
+          gbspacklib::ObjectBankData {
             size: 16380,
             bank: 255,
           },
         ],
       },
-      gbspack::ObjectData {
+      gbspacklib::ObjectData {
         filename: "b.o".to_string(),
         contents: "second file".to_string(),
         banks: vec![
-          gbspack::ObjectBankData { size: 15, bank: 2 },
-          gbspack::ObjectBankData {
+          gbspacklib::ObjectBankData { size: 15, bank: 2 },
+          gbspacklib::ObjectBankData {
             size: 500,
             bank: 255,
           },
-          gbspack::ObjectBankData {
+          gbspacklib::ObjectBankData {
             size: 40,
             bank: 255,
           },
         ],
       },
     ];
-    let output = gbspack::pack_object_data(input, 255, 0, true);
+    let output = gbspacklib::pack_object_data(input, 255, 0, true);
     assert_eq!(output[0].filename, "a.o");
     assert_eq!(output[1].filename, "b.o");
     assert_eq!(output[0].replacements[0].from, 1);
@@ -96,34 +96,34 @@ S _SCRIPT_3 Def000000"
   #[test]
   fn test_pack_areas_mbc1() {
     let input = vec![
-      gbspack::ObjectData {
+      gbspacklib::ObjectData {
         filename: "a.o".to_string(),
         contents: "hello world".to_string(),
         banks: vec![
-          gbspack::ObjectBankData { size: 5, bank: 1 },
-          gbspack::ObjectBankData {
+          gbspacklib::ObjectBankData { size: 5, bank: 1 },
+          gbspacklib::ObjectBankData {
             size: 16380,
             bank: 255,
           },
         ],
       },
-      gbspack::ObjectData {
+      gbspacklib::ObjectData {
         filename: "b.o".to_string(),
         contents: "second file".to_string(),
         banks: vec![
-          gbspack::ObjectBankData { size: 15, bank: 2 },
-          gbspack::ObjectBankData {
+          gbspacklib::ObjectBankData { size: 15, bank: 2 },
+          gbspacklib::ObjectBankData {
             size: 16380,
             bank: 255,
           },
-          gbspack::ObjectBankData {
+          gbspacklib::ObjectBankData {
             size: 16380,
             bank: 255,
           },
         ],
       },
     ];
-    let output = gbspack::pack_object_data(input, 255, 31, true);
+    let output = gbspacklib::pack_object_data(input, 255, 31, true);
     assert_eq!(output[0].filename, "a.o");
     assert_eq!(output[1].filename, "b.o");
     assert_eq!(output[0].replacements[0].from, 1);
@@ -165,7 +165,7 @@ A _CODE_15 size 55 flags 0 addr 0
 S _SCRIPT_3 Def000000"
       .to_owned();
 
-    assert_eq!(gbspack::replace_bank(&input, 255, 15), expected_output);
+    assert_eq!(gbspacklib::replace_bank(&input, 255, 15), expected_output);
   }
 
   #[test]
@@ -195,7 +195,7 @@ S _SCRIPT_3 Def000000"
       .to_owned();
 
     assert_eq!(
-      gbspack::replace_bank(&gbspack::replace_bank(&input, 5, 14), 255, 15),
+      gbspacklib::replace_bank(&gbspacklib::replace_bank(&input, 5, 14), 255, 15),
       expected_output
     );
   }
@@ -229,30 +229,30 @@ S _SCRIPT_3 Def000000"
       .to_owned();
 
     let patch = vec![
-      gbspack::BankReplacement { from: 5, to: 6 },
-      gbspack::BankReplacement { from: 255, to: 7 },
+      gbspacklib::BankReplacement { from: 5, to: 6 },
+      gbspacklib::BankReplacement { from: 255, to: 7 },
     ];
 
-    assert_eq!(gbspack::replace_all_banks(&input, patch), expected_output);
+    assert_eq!(gbspacklib::replace_all_banks(&input, patch), expected_output);
   }
 
   #[test]
   fn test_cart_size() {
-    assert_eq!(gbspack::to_cart_size(5), 8);
-    assert_eq!(gbspack::to_cart_size(6), 8);
-    assert_eq!(gbspack::to_cart_size(7), 8);
-    assert_eq!(gbspack::to_cart_size(8), 16);
-    assert_eq!(gbspack::to_cart_size(31), 32);
-    assert_eq!(gbspack::to_cart_size(32), 64);
-    assert_eq!(gbspack::to_cart_size(33), 64);
+    assert_eq!(gbspacklib::to_cart_size(5), 8);
+    assert_eq!(gbspacklib::to_cart_size(6), 8);
+    assert_eq!(gbspacklib::to_cart_size(7), 8);
+    assert_eq!(gbspacklib::to_cart_size(8), 16);
+    assert_eq!(gbspacklib::to_cart_size(31), 32);
+    assert_eq!(gbspacklib::to_cart_size(32), 64);
+    assert_eq!(gbspacklib::to_cart_size(33), 64);
   }
 
   #[test]
   fn test_output_filename() {
-    assert_eq!(gbspack::to_output_filename("/a/b/c.o", "", "o"), "/a/b/c.o");
-    assert_eq!(gbspack::to_output_filename("/a/b/c.o", "", "rel"), "/a/b/c.rel");
-    assert_eq!(gbspack::to_output_filename("/a/b/c.o", "/d/e", "o"), "/d/e/c.o");
-    assert_eq!(gbspack::to_output_filename("/a/b/c.o", "/d/e", "rel"), "/d/e/c.rel");
+    assert_eq!(gbspacklib::to_output_filename("/a/b/c.o", "", "o"), "/a/b/c.o");
+    assert_eq!(gbspacklib::to_output_filename("/a/b/c.o", "", "rel"), "/a/b/c.rel");
+    assert_eq!(gbspacklib::to_output_filename("/a/b/c.o", "/d/e", "o"), "/d/e/c.o");
+    assert_eq!(gbspacklib::to_output_filename("/a/b/c.o", "/d/e", "rel"), "/d/e/c.rel");
 
   }
 

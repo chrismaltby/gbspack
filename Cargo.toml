@@ -9,3 +9,11 @@ edition = "2018"
 [dependencies]
 clap = "2.33.3"
 regex = "1"
+
+[lib]
+name = "gbspacklib"
+path = "src/lib.rs"
+
+[[bin]]
+name = "gbspack"
+path = "src/main.rs"
