@@ -1,3 +1,4 @@
+use regex::Captures;
 use regex::Regex;
 use std::fs::File;
 use std::io::prelude::*;
@@ -94,8 +95,18 @@ pub fn replace_bank(object_string: &String, original_bank: u32, bank_no: u32) ->
     let replace_code = format!("CODE_{}", bank_no);
     let replaced_string = new_string.replace(&find_code, &replace_code);
     let re = Regex::new(&format!("__bank_(?P<s>[^ ]*) Def{:06X}", original_bank)).unwrap();
-    let result = re.replace_all(&replaced_string, "__bank_$s Def00000F");
+    let result = re.replace_all(&replaced_string, |caps: &Captures| {
+        format!("__bank_{} Def{:06X}", &caps[1], bank_no)
+    });
     result.to_string()
+}
+
+pub fn replace_all_banks(object_string: &String, replacements: Vec<BankReplacement>) -> String {
+    replacements
+        .into_iter()
+        .fold(object_string.clone(), |string, replacement| {
+            replace_bank(&string, replacement.from, replacement.to)
+        })
 }
 
 /// Pack an vector of object data into a vector of banks
@@ -219,7 +230,7 @@ fn get_bank_replacements(index: usize, packed: &Vec<Bank>, mbc1: bool) -> Vec<Ba
             if object.0 == index {
                 replacements.push(BankReplacement {
                     from: object.1.bank,
-                    to: bank_no
+                    to: bank_no,
                 })
             }
         }
@@ -227,4 +238,34 @@ fn get_bank_replacements(index: usize, packed: &Vec<Bank>, mbc1: bool) -> Vec<Ba
     }
 
     replacements
+}
+
+/// Calculate minimum cart size needed by rounding max bank number
+/// to nearest power of 2
+pub fn to_cart_size(max_bank: u32) -> u32 {
+    let power = (((max_bank + 1) as f32).ln() / (2_f32).ln()).ceil() as u32;
+    (2_u32).pow(power)
+}
+
+/// Get new filename for object data
+pub fn to_output_filename(
+    original_filename: &str,
+    output_path: &str,
+    ext: &str,
+) -> String {
+    let original_path = Path::new(original_filename);
+    let file_stem = original_path.file_stem().unwrap().to_str().unwrap();
+    if output_path.len() > 0 {
+        // Store output in dir specified by output_path
+        let path = Path::new(&output_path);
+        let new_path = path.join(format!("{}.{}", file_stem, ext));
+        new_path.to_str().unwrap().to_owned()
+    } else {
+        // Replace object file in-place
+        let new_path = original_path
+            .parent()
+            .unwrap()
+            .join(format!("{}.{}", file_stem, ext));
+        new_path.to_str().unwrap().to_owned()
+    }
 }

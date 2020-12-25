@@ -315,8 +315,6 @@ fn pack_object_data(mut objects: Vec<ObjectData>, bank_offset: u32) -> Vec<Bank>
     }
   }
 
-  println!("BANKS LEN = {}", banks.len());
-
   while !objects.is_empty() {
     let mut stored = false;
     let object = objects.pop().unwrap();
@@ -354,8 +352,6 @@ fn pack_object_data(mut objects: Vec<ObjectData>, bank_offset: u32) -> Vec<Bank>
       banks.push(new_bank);
     }
   }
-
-  
 
   banks
 }
