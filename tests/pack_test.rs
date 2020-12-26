@@ -138,6 +138,39 @@ S _SCRIPT_3 Def000000"
     assert_eq!(output[1].replacements[2].to, 34);
   }
 
+  #[test]
+  fn test_pack_areas_max() {
+    let input = vec![
+      gbspacklib::ObjectData {
+        filename: "a.o".to_string(),
+        contents: "hello world".to_string(),
+        banks: vec![
+          gbspacklib::ObjectBankData { size: 5, bank: 1 },
+          gbspacklib::ObjectBankData {
+            size: 16380,
+            bank: 255,
+          },
+        ],
+      },
+      gbspacklib::ObjectData {
+        filename: "b.o".to_string(),
+        contents: "second file".to_string(),
+        banks: vec![
+          gbspacklib::ObjectBankData { size: 15, bank: 2 },
+          gbspacklib::ObjectBankData {
+            size: 16380,
+            bank: 255,
+          },
+          gbspacklib::ObjectBankData {
+            size: 16380,
+            bank: 255,
+          },
+        ],
+      },
+    ];
+    let output = gbspacklib::pack_object_data(input, 255, 35, true);
+    assert_eq!(gbspacklib::get_patch_max_bank(&output), 37);
+  }
 
   #[test]
   fn test_replace_one_bank() {

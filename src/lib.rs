@@ -250,11 +250,7 @@ pub fn to_cart_size(max_bank: u32) -> u32 {
 }
 
 /// Get new filename for object data
-pub fn to_output_filename(
-    original_filename: &str,
-    output_path: &str,
-    ext: &str,
-) -> String {
+pub fn to_output_filename(original_filename: &str, output_path: &str, ext: &str) -> String {
     let original_path = Path::new(original_filename);
     let file_stem = original_path.file_stem().unwrap().to_str().unwrap();
     if output_path.len() > 0 {
@@ -270,4 +266,16 @@ pub fn to_output_filename(
             .join(format!("{}.{}", file_stem, ext));
         new_path.to_str().unwrap().to_owned()
     }
+}
+
+pub fn get_patch_max_bank(packed: &Vec<ObjectPatch>) -> u32 {
+    let mut max = 0;
+    for patch in packed {
+        for replacement in &(patch.replacements) {
+            if replacement.to > max {
+                max = replacement.to;
+            }
+        }
+    }
+    max
 }

@@ -104,6 +104,8 @@ fn main() -> std::io::Result<()> {
   // Pack object data into banks
   let packed = gbspacklib::pack_object_data(objects, filter, bank_offset, mbc1);
 
+  let max_bank_no = gbspacklib::get_patch_max_bank(&packed);
+
   for patch in packed {
     let output_filename = gbspacklib::to_output_filename(&patch.filename, &output_path, &ext);
     if verbose {
@@ -121,12 +123,10 @@ fn main() -> std::io::Result<()> {
     println!("Done");
   }
 
-  let bank_no = 255;
-
   if print_cart {
-    println!("{}", gbspacklib::to_cart_size(bank_no));
+    println!("{}", gbspacklib::to_cart_size(max_bank_no));
   } else if print_max {
-    println!("{}", bank_no);
+    println!("{}", max_bank_no);
   }
 
   Ok(())
