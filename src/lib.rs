@@ -157,14 +157,16 @@ pub fn pack_object_data(
     }
 
     // Check fixed areas are within max size
-    let max_fixed_area_size = banks
-        .iter()
-        .map(|b| b.objects.iter().fold(0, |a, b| a + b.1.size))
-        .max()
-        .unwrap_or(0);
-
-    if BANK_SIZE < max_fixed_area_size {
-        panic!("Bank overflow");
+    for (bank_index, bank) in banks.iter().enumerate() {
+        let size = bank.objects.iter().fold(0, |a, b| a + b.1.size);
+        if size > BANK_SIZE {
+            panic!(
+                "Bank overflow in {}. Size was {} bytes where max allowed is {} bytes",
+                bank_index + 1,
+                size,
+                BANK_SIZE
+            );
+        }
     }
 
     // Pack unfixed areas
