@@ -5,7 +5,7 @@ use gbspacklib;
 
 fn main() -> std::io::Result<()> {
   let matches = App::new("GBStudio Pack")
-    .version("1.2.5")
+    .version("1.2.6")
     .author("Chris Maltby. <chris.maltby@gmail.com>")
     .about("Packs object files created by GB Studio data into banks")
     .arg(
@@ -24,6 +24,14 @@ fn main() -> std::io::Result<()> {
       .help("Only repack files from specified bank (default repack all banks)")
       .takes_value(true),
     )
+    .arg(
+      Arg::with_name("additional")
+      .short("a")
+      .long("additional")
+      .value_name("NN")
+      .help("Reserve N additional banks at end of cart for batteryless saving (default 0)")
+      .takes_value(true),
+    )    
     .arg(
       Arg::with_name("mbc1")
         .long("mbc1")
@@ -78,6 +86,7 @@ fn main() -> std::io::Result<()> {
   let output_path = value_t!(matches.value_of("output_path"), String).unwrap_or(("").to_string());
   let ext = value_t!(matches.value_of("ext"), String).unwrap_or(("o").to_string());
   let filter = value_t!(matches.value_of("filter"), u32).unwrap_or(0);
+  let additional = value_t!(matches.value_of("additional"), u32).unwrap_or(0);
 
   if verbose {
     println!("Starting at bank={}", bank_offset);
@@ -104,7 +113,7 @@ fn main() -> std::io::Result<()> {
   // Pack object data into banks
   let packed = gbspacklib::pack_object_data(objects, filter, bank_offset, mbc1);
 
-  let max_bank_no = gbspacklib::get_patch_max_bank(&packed);
+  let max_bank_no = gbspacklib::get_patch_max_bank(&packed) + additional;
 
   for patch in packed {
     let output_filename = gbspacklib::to_output_filename(&patch.filename, &output_path, &ext);

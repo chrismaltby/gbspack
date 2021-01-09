@@ -28,6 +28,8 @@ gbspack -b 6 scene5_init.o scene6_init.o etc...
 
 - `--filter` Only repack files from specified bank (default repack all banks)
 
+- `--additional` Reserve N additional banks at end of cart for batteryless saving (default 0)
+
 ## Input files
 
 Input object files must be in the following format
