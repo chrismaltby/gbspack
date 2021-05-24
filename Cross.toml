@@ -1,0 +1,7 @@
+[build.env]
+passthrough = [
+    "RUSTFLAGS",
+]
+
+[target.i686-pc-windows-gnu]
+image = "japaric/i686-pc-windows-gnu"

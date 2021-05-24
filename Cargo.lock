@@ -52,7 +52,7 @@ dependencies = [
 
 [[package]]
 name = "gbspack"
-version = "1.2.6"
+version = "1.2.7"
 dependencies = [
  "clap",
  "regex",

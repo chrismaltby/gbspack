@@ -1,22 +1,5 @@
 version: 2.1
 
-commands:
-  install_mingw:
-    steps:
-      - run:
-          name: Install mingw
-          command: |
-            sudo apt update
-            # This package contains tools for both i686 and x86_64 targets
-            sudo apt install -y gcc-mingw-w64
-      - run:
-          name: Add mingw target
-          command: |
-            rustup target add i686-pc-windows-gnu
-            # Set the linker to use for Rust/mingw
-            echo '[target.i686-pc-windows-gnu]' >> ~/.cargo/config
-            echo 'linker = "/usr/bin/i686-w64-mingw32-gcc"' >> ~/.cargo/config
-
 jobs:
   checkout:
     docker:
@@ -37,6 +20,7 @@ jobs:
           root: ~/
           paths:
             - repo
+
   test:
     docker:
       - image: circleci/rust:1.49.0
@@ -46,42 +30,6 @@ jobs:
           at: ~/
       - run: cargo test
 
-  "make_win32":
-    docker:
-      - image: circleci/rust:1.49.0
-    working_directory: ~/repo
-    steps:
-      - attach_workspace:
-          at: ~/
-      - checkout
-      - install_mingw
-      - run: rustup target add i686-pc-windows-gnu
-      - run: rustup toolchain install stable-i686-pc-windows-gnu
-      - run: cargo build --target i686-pc-windows-gnu --release
-      - run: sudo mkdir -p ~/repo/out/windows_x86-${CIRCLE_BRANCH}
-      - run: sudo mv ~/repo/target/release/gbspack.exe ~/repo/out/windows_x86-${CIRCLE_BRANCH}/
-      - run: sudo mv ~/repo/README.md ~/repo/out/windows_x86-${CIRCLE_BRANCH}/
-      - run: sudo mv ~/LICENSE ~/repo/out/windows_x86-${CIRCLE_BRANCH}/
-      - run:
-          name: zip build
-          command: sudo zip gbspack-windows_x86-${CIRCLE_BRANCH}.zip ./windows_x86-${CIRCLE_BRANCH}/*
-          working_directory: ~/repo/out
-      - persist_to_workspace:
-          root: ~/
-          paths:
-            - repo/out/make
-
-  upload_artifacts:
-    docker:
-      - image: circleci/rust:1.49.0
-    working_directory: /
-    steps:
-      - attach_workspace:
-          at: ~/
-      - store_artifacts:
-          path: ~/repo/out/make
-          destination: builds
-
 workflows:
   version: 2
   deployment:
@@ -90,17 +38,3 @@ workflows:
       - test:
           requires:
             - checkout
-      - "make_win32":
-          requires:
-            - checkout
-          filters:
-            branches:
-              only:
-                - main
-      - "upload_artifacts":
-          requires:
-            - "make_win32"
-          filters:
-            branches:
-              only:
-                - main

@@ -20,12 +20,8 @@ mv target/release/gbspack releases/$VERSION/mac
 cross build --target x86_64-unknown-linux-gnu --release
 mv target/x86_64-unknown-linux-gnu/release/gbspack releases/$VERSION/linux
 
-echo ""
-echo "Manually build for Windows then copy exe to releases/$VERSION/windows"
-echo ""
-echo "rustup run stable-i686-pc-windows-gnu cargo build --release"
-echo ""
-read -p "Press any key once exe has been copied"
+cross build --target i686-pc-windows-gnu --release
+mv target/i686-pc-windows-gnu/release/gbspack.exe releases/$VERSION/windows
 
 cd releases/$VERSION
 cd mac
