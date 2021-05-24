@@ -37,7 +37,7 @@ jobs:
       - attach_workspace:
           at: ~/
       - checkout
-      - run; rustup target add i686-pc-windows-gnu
+      - run: rustup target add i686-pc-windows-gnu
       - run: rustup toolchain install stable-i686-pc-windows-gnu
       - run: cargo build --target i686-pc-windows-gnu --release
       - run: sudo mkdir -p ~/repo/out/windows_x86-${CIRCLE_BRANCH}
