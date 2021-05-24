@@ -1,5 +1,15 @@
 version: 2
 
+commands:
+  install-mingw:
+    steps:
+      - run:
+          name: Install mingw
+          command: |
+            sudo apt update
+            # This package contains tools for both i686 and x86_64 targets
+            sudo apt install -y gcc-mingw-w64
+
 jobs:
   checkout:
     docker:
@@ -29,15 +39,6 @@ jobs:
           at: ~/
       - run: cargo test
 
-  install-mingw:
-    steps:
-      - run:
-          name: Install mingw
-          command: |
-            sudo apt update
-            # This package contains tools for both i686 and x86_64 targets
-            sudo apt install -y gcc-mingw-w64
-
   "make:win32":
     docker:
       - image: circleci/rust:1.49.0
@@ -46,6 +47,7 @@ jobs:
       - attach_workspace:
           at: ~/
       - checkout
+      - install-mingw
       - run: rustup target add i686-pc-windows-gnu
       - run: rustup toolchain install stable-i686-pc-windows-gnu
       - run: cargo build --target i686-pc-windows-gnu --release
@@ -84,7 +86,6 @@ workflows:
       - "make:win32":
           requires:
             - checkout
-            - install-mingw
           filters:
             branches:
               only:
