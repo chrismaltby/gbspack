@@ -29,6 +29,15 @@ jobs:
           at: ~/
       - run: cargo test
 
+  install-mingw:
+    steps:
+      - run:
+          name: Install mingw
+          command: |
+            sudo apt update
+            # This package contains tools for both i686 and x86_64 targets
+            sudo apt install -y gcc-mingw-w64
+
   "make:win32":
     docker:
       - image: circleci/rust:1.49.0
@@ -75,6 +84,7 @@ workflows:
       - "make:win32":
           requires:
             - checkout
+            - install-mingw
           filters:
             branches:
               only:
