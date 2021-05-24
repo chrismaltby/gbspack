@@ -3,6 +3,7 @@ use regex::Regex;
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
+use std::io::BufReader;
 
 #[derive(Debug, Clone)]
 pub struct Bank {
@@ -41,7 +42,14 @@ const BANK_SIZE: u32 = 16384;
 /// to pack the data into banks
 pub fn to_object_data(filename: &String) -> std::io::Result<ObjectData> {
     let path = Path::new(filename);
-    let mut file = File::open(path)?;
+    let mut file = match File::open(path) {
+        Ok(file) => file,
+        Err(err) => {
+            println!("gbspack: Unable to open file \"{}\": {}", filename, err);
+            std::process::exit(1);
+        }
+    };
+
     let mut contents = String::new();
     file.read_to_string(&mut contents)?;
     let banks = parse_sizes(&contents);
@@ -278,4 +286,20 @@ pub fn get_patch_max_bank(packed: &Vec<ObjectPatch>) -> u32 {
         }
     }
     max
+}
+
+/// Load file to vec of filepath strings
+pub fn lines_from_file(filename: &String) -> Vec<String> {
+    let file = match File::open(filename) {
+        Ok(file) => file,
+        Err(err) => {
+            println!("gbspack: Unable to open file \"{}\": {}", filename, err);
+            std::process::exit(1);
+        }
+    };
+
+    let buf = BufReader::new(file);
+    buf.lines()
+        .map(|l| l.expect("Could not parse line"))
+        .collect()
 }
