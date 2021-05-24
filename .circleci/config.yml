@@ -37,6 +37,7 @@ jobs:
       - attach_workspace:
           at: ~/
       - checkout
+      - run: rustup toolchain install stable-i686-pc-windows-gnu
       - run: rustup run stable-i686-pc-windows-gnu cargo build --release
       - run: sudo mkdir -p ~/repo/out/windows_x86-${CIRCLE_BRANCH}
       - run: sudo mv ~/repo/target/release/gbspack.exe ~/repo/out/windows_x86-${CIRCLE_BRANCH}/
