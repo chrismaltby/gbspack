@@ -1,0 +1,86 @@
+version: 2
+
+jobs:
+  checkout:
+    docker:
+      - image: cimg/rust
+    working_directory: ~/repo
+    steps:
+      - restore_cache:
+          keys:
+            - v1-gbspack-src-{{ .Branch }}-{{ .Revision }}
+            - v1-gbspack-src-{{ .Branch }}-
+            - v1-gbspack-src-
+      - checkout
+      - save_cache:
+          paths:
+            - ./*
+          key: v1-gbspack-src-{{ .Branch }}-{{ .Revision }}
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - repo
+  test:
+    docker:
+      - image: cimg/rust
+    working_directory: ~/repo
+    steps:
+      - attach_workspace:
+          at: ~/
+      - run: cargo test
+
+  "make:win32":
+    docker:
+      - image: cimg/rust:1.52.1
+    working_directory: ~/repo
+    steps:
+      - attach_workspace:
+          at: ~/
+      - checkout
+      - run: rustup run stable-i686-pc-windows-gnu cargo build --release
+      - run: sudo mkdir -p ~/repo/out/windows_x86-${CIRCLE_BRANCH}
+      - run: sudo mv ~/repo/target/release/gbspack.exe ~/repo/out/windows_x86-${CIRCLE_BRANCH}/
+      - run: sudo mv ~/repo/README.md ~/repo/out/windows_x86-${CIRCLE_BRANCH}/
+      - run: sudo mv ~/LICENSE ~/repo/out/windows_x86-${CIRCLE_BRANCH}/
+      - run:
+          name: zip build
+          command: sudo zip gbspack-windows_x86-${CIRCLE_BRANCH}.zip ./windows_x86-${CIRCLE_BRANCH}/*
+          working_directory: ~/repo/out
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - repo/out/make
+
+  upload_artifacts:
+    docker:
+      - image: cimg/rust:1.52.1
+    working_working_directory: /
+    steps:
+      - attach_workspace:
+          at: ~/
+      - store_artifacts:
+          path: ~/repo/out/make
+          destination: builds
+
+workflows:
+  version: 2
+  deployment:
+    jobs:
+      - checkout
+      - test:
+          requires:
+            - checkout
+      - "make:win32":
+          requires:
+            - checkout
+          filters:
+            branches:
+              only:
+                - main
+      - "upload_artifacts":
+          requires:
+            - "make:win32"
+          filters:
+            branches:
+              only:
+                - main
