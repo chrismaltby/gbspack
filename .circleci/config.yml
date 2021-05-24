@@ -12,11 +12,8 @@ commands:
       - run:
           name: Add mingw target
           command: |
-            rustup target add x86_64-pc-windows-gnu
             rustup target add i686-pc-windows-gnu
             # Set the linker to use for Rust/mingw
-            echo '[target.x86_64-pc-windows-gnu]' >> ~/.cargo/config
-            echo 'linker = "/usr/bin/x86_64-w64-mingw32-gcc"' >> ~/.cargo/config
             echo '[target.i686-pc-windows-gnu]' >> ~/.cargo/config
             echo 'linker = "/usr/bin/i686-w64-mingw32-gcc"' >> ~/.cargo/config
 
