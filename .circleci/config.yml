@@ -1,7 +1,7 @@
 version: 2
 
 commands:
-  install-mingw:
+  install_mingw:
     steps:
       - run:
           name: Install mingw
@@ -47,7 +47,7 @@ jobs:
       - attach_workspace:
           at: ~/
       - checkout
-      - install-mingw
+      - install_mingw
       - run: rustup target add i686-pc-windows-gnu
       - run: rustup toolchain install stable-i686-pc-windows-gnu
       - run: cargo build --target i686-pc-windows-gnu --release
