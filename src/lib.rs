@@ -125,6 +125,7 @@ pub fn pack_object_data(
     filter: u32,
     bank_offset: u32,
     mbc1: bool,
+    reserve: Vec<u32>
 ) -> Vec<ObjectPatch> {
     let mut banks = Vec::new();
 
@@ -167,7 +168,8 @@ pub fn pack_object_data(
     // Check fixed areas are within max size
     for (bank_index, bank) in banks.iter().enumerate() {
         let size = bank.objects.iter().fold(0, |a, b| a + b.1.size);
-        if size > BANK_SIZE {
+        let reserved = reserve[bank_index + 1];
+        if size + reserved > BANK_SIZE {
             panic!(
                 "Bank overflow in {}. Size was {} bytes where max allowed is {} bytes",
                 bank_index + 1,
@@ -194,9 +196,10 @@ pub fn pack_object_data(
 
                 // Calculate current size of bank
                 let res: u32 = bank.objects.iter().fold(0, |a, b| a + b.1.size);
+                let reserved = reserve[bank_no as usize];
 
                 // If can fit store it here
-                if (res + area.1.size) <= BANK_SIZE {
+                if (res + area.1.size + reserved) <= BANK_SIZE {
                     bank.objects.push(area.clone());
                     stored = true;
                     break;
@@ -204,6 +207,10 @@ pub fn pack_object_data(
             }
             // No room in existing banks, create a new bank
             if !stored {
+                let next_reserved = reserve[(bank_no + 1) as usize];
+                if area.1.size + next_reserved > BANK_SIZE {
+                    panic!("Oversized {}", area.1.size);
+                }
                 let mut new_bank = Bank { objects: vec![] };
                 new_bank.objects.push(area.clone());
                 banks.push(new_bank);

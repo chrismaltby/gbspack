@@ -31,12 +31,19 @@ fn main() -> std::io::Result<()> {
       .value_name("NN")
       .help("Reserve N additional banks at end of cart for batteryless saving (default 0)")
       .takes_value(true),
-    )    
+    )
+    .arg(
+      Arg::with_name("reserve_space")
+        .long("reserve")
+        .short("s")
+        .help("Optionally reserve space in banks using format 1:7F3,2:00F")
+        .takes_value(true),
+    )
     .arg(
       Arg::with_name("mbc1")
         .long("mbc1")
         .help("Use MBC1 hardware (skip banks 0x20, 0x40 and 0x60)"),
-    )    
+    )
     .arg(
       Arg::with_name("output_path")
         .short("o")
@@ -63,14 +70,14 @@ fn main() -> std::io::Result<()> {
         .long("report-head")
         .help("Optionally prepend string to head of generated report file")
         .takes_value(true),
-    )            
+    )
     .arg(
       Arg::with_name("ext")
         .short("e")
         .long("ext")
         .help("Replace the file extension for output files")
         .takes_value(true),
-    )    
+    )
     .arg(
       Arg::with_name("INPUT")
         .help("Sets the input .o files to use")
@@ -109,6 +116,18 @@ fn main() -> std::io::Result<()> {
   let ext = value_t!(matches.value_of("ext"), String).unwrap_or(("o").to_string());
   let filter = value_t!(matches.value_of("filter"), u32).unwrap_or(0);
   let additional = value_t!(matches.value_of("additional"), u32).unwrap_or(0);
+  let reserve_space = value_t!(matches.value_of("reserve_space"), String).unwrap_or(("").to_string());
+
+  let mut reserve = vec![0; 2048];
+  let reserve_split = reserve_space.split(",");
+  for s in reserve_split {
+    let split = s.split(":").collect::<Vec<&str>>();
+    if split.len() == 2 {
+      let bank = split[0].parse::<usize>().unwrap_or(0);
+      let size = u32::from_str_radix(split[1], 16).unwrap_or(0);
+      reserve[bank] = size;
+    }
+  }
 
   if input_file.len() > 0 {
     let lines = gbspacklib::lines_from_file(&input_file);
@@ -138,7 +157,7 @@ fn main() -> std::io::Result<()> {
   }
 
   // Pack object data into banks
-  let packed = gbspacklib::pack_object_data(objects, filter, bank_offset, mbc1);
+  let packed = gbspacklib::pack_object_data(objects, filter, bank_offset, mbc1, reserve);
 
   let max_bank_no = gbspacklib::get_patch_max_bank(&packed) + additional;
 
