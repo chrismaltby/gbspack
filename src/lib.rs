@@ -93,9 +93,10 @@ pub fn replace_bank(object_string: &String, original_bank: u32, bank_no: u32) ->
             let fn_def = format!("S _{}", fn_name);
             // If symbol has pair
             if new_string.contains(&fn_def) {
-                let find_banked_fn_def = format!("b_{} Def[0]*{:06X}", fn_name, original_bank);
+                let find_banked_fn_def_pattern = format!(r"b_{} Def[0]*{:06X}", fn_name, original_bank);
                 let replace_banked_fn_def = format!("b_{} Def{:06X}", fn_name, bank_no);
-                new_string = new_string.replace(&find_banked_fn_def, &replace_banked_fn_def);
+                let re = Regex::new(&find_banked_fn_def_pattern).unwrap();
+                new_string = re.replace_all(&new_string, &replace_banked_fn_def as &str).to_string();
             }
         }
     }
