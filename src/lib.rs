@@ -93,7 +93,7 @@ pub fn replace_bank(object_string: &String, original_bank: u32, bank_no: u32) ->
             let fn_def = format!("S _{}", fn_name);
             // If symbol has pair
             if new_string.contains(&fn_def) {
-                let find_banked_fn_def = format!("b_{} Def{:06X}", fn_name, original_bank);
+                let find_banked_fn_def = format!("b_{} Def[0]*{:06X}", fn_name, original_bank);
                 let replace_banked_fn_def = format!("b_{} Def{:06X}", fn_name, bank_no);
                 new_string = new_string.replace(&find_banked_fn_def, &replace_banked_fn_def);
             }
@@ -102,7 +102,7 @@ pub fn replace_bank(object_string: &String, original_bank: u32, bank_no: u32) ->
     let find_code = format!("CODE_{}", original_bank);
     let replace_code = format!("CODE_{}", bank_no);
     let replaced_string = new_string.replace(&find_code, &replace_code);
-    let re = Regex::new(&format!("__bank_(?P<s>[^ ]*) Def{:06X}", original_bank)).unwrap();
+    let re = Regex::new(&format!("__bank_(?P<s>[^ ]*) Def[0]*{:06X}", original_bank)).unwrap();
     let result = re.replace_all(&replaced_string, |caps: &Captures| {
         format!("__bank_{} Def{:06X}", &caps[1], bank_no)
     });
