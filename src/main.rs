@@ -5,7 +5,7 @@ use gbspacklib;
 
 fn main() -> std::io::Result<()> {
   let matches = App::new("GBStudio Pack")
-    .version("1.2.7")
+    .version("1.2.9")
     .author("Chris Maltby. <chris.maltby@gmail.com>")
     .about("Packs object files created by GB Studio data into banks")
     .arg(
